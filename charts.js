@@ -21,7 +21,7 @@
     const N = Math.max(2, A.diffDays(o.to, o.from) + 1), X = (i) => L + i * (w - L - R) / (N - 1), Y = (v) => T + (hi - v) * (h - T - B) / (hi - lo);
     let s = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img" aria-label="' + esc(o.label || 'Wykres') + '">';
     (o.ticks || [lo, (lo + hi) / 2, hi]).forEach((t) => { s += '<line x1="' + L + '" x2="' + (w - R) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="var(--line)" stroke-width="1"/><text x="' + (L - 6) + '" y="' + (Y(t) + 4) + '" text-anchor="end" class="ct">' + t + '</text>'; });
-    if (o.band) s += '<rect x="' + L + '" y="' + Y(o.band[1]) + '" width="' + (w - L - R) + '" height="' + (Y(o.band[0]) - Y(o.band[1])) + '" fill="var(--teal-50)" opacity=".8"/>';
+    if (o.band) s += '<rect x="' + L + '" y="' + Y(o.band[1]) + '" width="' + (w - L - R) + '" height="' + (Y(o.band[0]) - Y(o.band[1])) + '" fill="var(--brand-50)" opacity=".8"/>';
     const xl = N > 6 ? [0, Math.floor((N - 1) / 2), N - 1] : [0, N - 1];
     xl.forEach((i) => { s += '<text x="' + X(i) + '" y="' + (h - 6) + '" text-anchor="' + (i === 0 ? 'start' : i === N - 1 ? 'end' : 'middle') + '" class="ct">' + lab(A.addDays(o.from, i)) + '</text>'; });
     o.series.forEach((se) => {
@@ -43,10 +43,10 @@
     const slot = (w - L - R) / N, bw = Math.max(2, Math.min(14, slot * 0.7)), Y = (v) => T + (hi - v) * (h - T - B) / (hi - lo);
     let s = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img" aria-label="' + esc(o.label || 'Wykres') + '">';
     [0, 4, 8].forEach((t) => { s += '<line x1="' + L + '" x2="' + (w - R) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (Y(t) + 4) + '" text-anchor="end" class="ct">' + t + '</text>'; });
-    if (o.band) s += '<rect x="' + L + '" y="' + Y(o.band[1]) + '" width="' + (w - L - R) + '" height="' + (Y(o.band[0]) - Y(o.band[1])) + '" fill="var(--teal-50)"/>';
+    if (o.band) s += '<rect x="' + L + '" y="' + Y(o.band[1]) + '" width="' + (w - L - R) + '" height="' + (Y(o.band[0]) - Y(o.band[1])) + '" fill="var(--brand-50)"/>';
     o.data.forEach((p) => {
       const i = A.diffDays(p[0], o.from); if (i < 0 || !num(p[1])) return; const v = p[1], x = L + i * slot + (slot - bw) / 2;
-      const col = o.color ? o.color(v) : 'var(--teal)'; s += '<rect x="' + x.toFixed(1) + '" y="' + Y(v).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(v)).toFixed(1) + '" rx="' + Math.min(4, bw / 2) + '" fill="' + col + '"/>';
+      const col = o.color ? o.color(v) : 'var(--brand)'; s += '<rect x="' + x.toFixed(1) + '" y="' + Y(v).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Y(0) - Y(v)).toFixed(1) + '" rx="' + Math.min(4, bw / 2) + '" fill="' + col + '"/>';
     });
     [0, N - 1].forEach((i) => { s += '<text x="' + (L + i * slot + (i ? slot : 0)) + '" y="' + (h - 6) + '" text-anchor="' + (i ? 'end' : 'start') + '" class="ct">' + lab(A.addDays(o.from, i)) + '</text>'; });
     return s + '</svg>';
@@ -61,7 +61,7 @@
     const nice = (v, d) => Number(v).toFixed(d || 0).replace('.', ',');
     let s = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img" aria-label="' + esc(o.label || 'Wykres punktowy') + '">';
     [0, 0.5, 1].forEach((f) => { const yv = y0 + (y1 - y0) * f, xv = x0 + (x1 - x0) * f; s += '<line x1="' + L + '" x2="' + (w - R) + '" y1="' + Y(yv) + '" y2="' + Y(yv) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (Y(yv) + 4) + '" text-anchor="end" class="ct">' + nice(yv, o.ydec) + '</text><text x="' + X(xv) + '" y="' + (h - 18) + '" text-anchor="middle" class="ct">' + nice(xv, o.xdec) + '</text>'; });
-    pts.forEach((p, i) => { const jx = ((i * 37) % 11 - 5) * 0.35, jy = ((i * 53) % 11 - 5) * 0.35; s += '<circle cx="' + (X(p[0]) + jx).toFixed(1) + '" cy="' + (Y(p[1]) + jy).toFixed(1) + '" r="4.2" fill="var(--teal)" opacity=".55"/>'; });
+    pts.forEach((p, i) => { const jx = ((i * 37) % 11 - 5) * 0.35, jy = ((i * 53) % 11 - 5) * 0.35; s += '<circle cx="' + (X(p[0]) + jx).toFixed(1) + '" cy="' + (Y(p[1]) + jy).toFixed(1) + '" r="4.2" fill="var(--brand)" opacity=".55"/>'; });
     const n = pts.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n; let sxy = 0, sxx = 0;
     pts.forEach((p) => { sxy += (p[0] - mx) * (p[1] - my); sxx += (p[0] - mx) * (p[0] - mx); });
     if (sxx > 0) { const b = sxy / sxx, a = my - b * mx; s += '<line x1="' + X(x0) + '" y1="' + Y(a + b * x0) + '" x2="' + X(x1) + '" y2="' + Y(a + b * x1) + '" stroke="var(--pink)" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"/>'; }
@@ -79,7 +79,7 @@
   /* kolor mapy cieplnej: 0..100, różowy -> neutralny -> turkusowy */
   function heat(v) {
     if (!num(v)) return null; const mix = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
-    const pink = [250, 164, 198], mid = [238, 244, 243], teal = [32, 185, 168];
+    const pink = [190, 176, 236], mid = [250, 240, 244], teal = [219, 63, 120];
     const c = v < 50 ? mix(pink, mid, Math.min(1, v / 50)) : mix(mid, teal, Math.min(1, (v - 50) / 40));
     return 'rgb(' + c.join(',') + ')';
   }
@@ -89,12 +89,12 @@
     const s = size || 112, has = num(score), sc = has ? score : 50, k = (sc - 50) / 50, cy = 71 + k * 15, R = 52, C = 2 * Math.PI * R, off = has ? C * (1 - sc / 100) : C;
     const id = 'g' + Math.round(Math.random() * 1e6);
     return '<svg viewBox="0 0 120 120" width="' + s + '" height="' + s + '" role="img" aria-label="Wskaźnik dnia ' + (has ? sc : 'brak danych') + '">'
-      + '<defs><linearGradient id="' + id + '" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#F0508C"/></linearGradient></defs>'
-      + '<circle cx="60" cy="60" r="' + R + '" fill="#fff" stroke="#E2EEEC" stroke-width="9"/>'
+      + '<defs><linearGradient id="' + id + '" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#DB3F78"/><stop offset="1" stop-color="#F4789F"/></linearGradient></defs>'
+      + '<circle cx="60" cy="60" r="' + R + '" fill="#fff" stroke="#F1E3E9" stroke-width="9"/>'
       + '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="url(#' + id + ')" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" transform="rotate(-90 60 60)" class="ring"/>'
-      + '<circle cx="46" cy="52" r="4.2" fill="#11302E"/><circle cx="74" cy="52" r="4.2" fill="#11302E"/>'
-      + '<circle cx="37" cy="66" r="6" fill="#F0508C" opacity=".28"/><circle cx="83" cy="66" r="6" fill="#F0508C" opacity=".28"/>'
-      + '<path d="M44 71 Q60 ' + cy.toFixed(1) + ' 76 71" fill="none" stroke="#11302E" stroke-width="3.6" stroke-linecap="round"/></svg>';
+      + '<circle cx="46" cy="52" r="4.2" fill="#2B1824"/><circle cx="74" cy="52" r="4.2" fill="#2B1824"/>'
+      + '<circle cx="37" cy="66" r="6" fill="#F4789F" opacity=".28"/><circle cx="83" cy="66" r="6" fill="#F4789F" opacity=".28"/>'
+      + '<path d="M44 71 Q60 ' + cy.toFixed(1) + ' 76 71" fill="none" stroke="#2B1824" stroke-width="3.6" stroke-linecap="round"/></svg>';
   }
 
   return { line, bars, scatter, spark, heat, face, esc, lab };

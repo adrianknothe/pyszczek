@@ -424,18 +424,19 @@
     const r = c[0], Y = METRICS[r.yk], g = r.groups, benefitUp = (g.hiMean - g.loMean) * OUT_GOOD[r.yk] > 0;
     const better = benefitUp ? g.hiMean : g.loMean, other = benefitUp ? g.loMean : g.hiMean, med = g.med;
     const up = (v) => Math.ceil(v * 2) / 2;
+    const R5 = (v, s) => Math.round(v / s) * s;
     const T = {
-      sleepHours: 'Przez 7 dni połóż się tak, by spać co najmniej ' + fmt(Math.max(up(med), 7), 1) + ' h.',
-      exerciseMin: 'Przez 7 dni zaplanuj ruch co najmniej ' + Math.max(15, Math.ceil(med / 5) * 5) + ' min dziennie, np. spacer.',
-      water: 'Przez 7 dni pij co najmniej ' + Math.round(Math.max(med, 1500) / 250) * 250 + ' ml wody dziennie.',
-      caffeine: med >= 1 ? 'Przez 7 dni ogranicz kofeinę do ' + Math.floor(med) + ' porcji dziennie i nie pij kawy po południu.' : 'Przez 7 dni spróbuj obejść się bez kofeiny albo pić ją tylko rano.',
-      alcohol: med >= 1 ? 'Przez 7 dni ogranicz alkohol do ' + Math.floor(med) + ' porcji lub mniej.' : 'Przez 7 dni spróbuj obyć się bez alkoholu.',
-      sugar: 'Przez 7 dni ogranicz cukry do około ' + Math.round(med / 5) * 5 + ' g dziennie.',
-      fiber: 'Przez 7 dni jedz co najmniej ' + Math.round(med) + ' g błonnika dziennie (warzywa, płatki owsiane, strączki).',
-      protein: 'Przez 7 dni jedz co najmniej ' + Math.round(med / 5) * 5 + ' g białka dziennie.'
+      sleepHours: { v: Math.max(up(med), 7), dir: 'up', txt: (t) => 'Przez 7 dni połóż się tak, by spać co najmniej ' + fmt(t, 1) + ' h.' },
+      exerciseMin: { v: Math.max(15, Math.ceil(med / 5) * 5), dir: 'up', txt: (t) => 'Przez 7 dni zaplanuj ruch co najmniej ' + t + ' min dziennie, np. spacer.' },
+      water: { v: Math.max(R5(Math.max(med, 1500), 250), 1500), dir: 'up', txt: (t) => 'Przez 7 dni pij co najmniej ' + t + ' ml wody dziennie.' },
+      caffeine: { v: Math.floor(med), dir: 'down', txt: (t) => t >= 1 ? 'Przez 7 dni ogranicz kofeinę do ' + t + ' porcji dziennie i nie pij kawy po południu.' : 'Przez 7 dni spróbuj obejść się bez kofeiny albo pić ją tylko rano.' },
+      alcohol: { v: Math.floor(med), dir: 'down', txt: (t) => t >= 1 ? 'Przez 7 dni ogranicz alkohol do ' + t + ' porcji lub mniej.' : 'Przez 7 dni spróbuj obyć się bez alkoholu.' },
+      sugar: { v: Math.max(10, R5(med, 5)), dir: 'down', txt: (t) => 'Przez 7 dni ogranicz cukry do około ' + t + ' g dziennie.' },
+      fiber: { v: Math.round(med), dir: 'up', txt: (t) => 'Przez 7 dni jedz co najmniej ' + t + ' g błonnika dziennie (warzywa, płatki owsiane, strączki).' },
+      protein: { v: Math.max(20, R5(med, 5)), dir: 'up', txt: (t) => 'Przez 7 dni jedz co najmniej ' + t + ' g białka dziennie.' }
     };
-    const when = r.lag ? 'następnego dnia ' : '';
-    return { x: r.xk, y: r.yk, text: T[r.xk] + ' W Twoich danych w takie dni ' + when + 'wskaźnik „' + Y.label + '” to średnio ' + fmt(better, Y.dec) + ' (wobec ' + fmt(other, Y.dec) + ' w pozostałe dni). Po tygodniu sprawdź, czy zależność się potwierdza.' };
+    const tpl = T[r.xk], when = r.lag ? 'następnego dnia ' : '';
+    return { x: r.xk, y: r.yk, lag: r.lag || 0, dir: tpl.dir, target: tpl.v, text: tpl.txt(tpl.v) + ' W Twoich danych w takie dni ' + when + 'wskaźnik „' + Y.label + '” to średnio ' + fmt(better, Y.dec) + ' (wobec ' + fmt(other, Y.dec) + ' w pozostałe dni). Po tygodniu sprawdź, czy zależność się potwierdza.' };
   }
 
   /* ---------- GŁÓWNA FUNKCJA ---------- */
