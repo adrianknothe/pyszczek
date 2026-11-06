@@ -338,3 +338,35 @@ details.card[open] summary::after { content: '−'; }
 
 /* ======= przypomnienia ======= */
 input.tm { width: auto; min-height: 34px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+
+/* ======= zwierzak Pyszczek ======= */
+.pet { position: fixed; z-index: 18; width: 76px; height: 76px; padding: 0; background: none; filter: drop-shadow(0 8px 10px rgba(43, 24, 36, .25)); transition: transform .45s cubic-bezier(.2, .9, .3, 1.2); touch-action: manipulation; }
+.pet svg { width: 100%; height: 100%; display: block; }
+.pet-r { right: 0; transform: translateX(78%) rotate(-14deg); } .pet-l { left: 0; transform: translateX(-78%) rotate(14deg) scaleX(-1); }
+.pet-r.in { transform: translateX(22%) rotate(-10deg); animation: petwig 1.6s ease-in-out .5s infinite; }
+.pet-l.in { transform: translateX(-22%) rotate(10deg) scaleX(-1); animation: petwigl 1.6s ease-in-out .5s infinite; }
+@keyframes petwig { 50% { transform: translateX(14%) rotate(-4deg); } } @keyframes petwigl { 50% { transform: translateX(-14%) rotate(4deg) scaleX(-1); } }
+.pet:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 50%; }
+.kiss { position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; justify-items: center; gap: 10px; background: rgba(255, 249, 251, .72); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); pointer-events: none; animation: kfade .18s ease-out both; }
+.kiss.out { opacity: 0; transition: opacity .3s; }
+.kiss-in { position: relative; width: 190px; height: 190px; }
+.kiss-pet { width: 100%; height: 100%; animation: kpop .35s cubic-bezier(.2, 1.4, .4, 1) both; } .kiss-pet svg { width: 100%; height: 100%; }
+.kiss-lips { position: absolute; width: 46px; left: 72px; top: 104px; animation: klips .55s cubic-bezier(.3, 1.3, .5, 1) .12s both; filter: drop-shadow(0 4px 6px rgba(176, 42, 98, .35)); }
+.kiss-lips svg { width: 100%; display: block; }
+.kiss-pet .nose { transform-origin: 60px 76px; animation: knose .4s ease-out .42s 2; }
+.kiss-txt { font-weight: 800; font-size: 20px; color: var(--brand-600); animation: kpop .4s .15s both; }
+.kheart { position: absolute; left: 50%; top: 55%; width: 16px; height: 14px; opacity: 0; animation: kheart .85s ease-out var(--d) both; }
+.kheart::before, .kheart::after { content: ''; position: absolute; top: 0; width: 8px; height: 13px; border-radius: 8px 8px 0 0; background: var(--brand); }
+.kheart::before { left: 8px; transform: rotate(-45deg); transform-origin: 0 100%; } .kheart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+@keyframes kfade { from { opacity: 0; } } @keyframes kpop { from { transform: scale(.6); opacity: 0; } }
+@keyframes klips { 0% { transform: translate(110px, 40px) scale(.6) rotate(25deg); opacity: 0; } 55% { transform: translate(0, 0) scale(1.15); opacity: 1; } 100% { transform: translate(0, -2px) scale(1); opacity: 1; } }
+@keyframes knose { 50% { transform: scale(1.35); } }
+@keyframes kheart { 0% { transform: translate(var(--x), 20px) scale(0); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate(calc(var(--x) * 1.3), -120px) scale(var(--s)); opacity: 0; } }
+.kiss.still *, .kiss.still { animation: none !important; } .kiss.still .kheart { display: none; } .kiss.still .kiss-lips { transform: none; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .pet.in { animation: none; } .pet { transition: none; } }
+@media print { .pet, .kiss { display: none !important; } }
+
+.pets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 4px 0 12px; }
+.pk { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 6px; border-radius: 16px; background: var(--soft); border: 2px solid transparent; font-size: 12px; font-weight: 700; color: var(--muted); }
+.pk svg { width: 52px; height: 52px; }
+.pk.on { border-color: var(--brand); background: var(--brand-50); color: var(--brand-600); }

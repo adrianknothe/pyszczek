@@ -8,7 +8,7 @@
   const TODAY = () => A.todayISO();
 
   /* ---------- stan i zapis ---------- */
-  const defaults = () => ({ name: '', age: '', heightCm: '', weightKg: '', activity: 'mid', goal: 'maintain', cycleLen: 28, periodLen: 5, trackCycle: true, hideKcal: false, rem: { evening: true, eTime: '20:30', morning: false, mTime: '08:30', water: false }, experiment: null, expHistory: [], supplements: [], lastBackup: null, onboarded: false });
+  const defaults = () => ({ name: '', age: '', heightCm: '', weightKg: '', activity: 'mid', goal: 'maintain', cycleLen: 28, periodLen: 5, trackCycle: true, hideKcal: false, pet: { on: true, caught: 0 }, rem: { evening: true, eTime: '20:30', morning: false, mTime: '08:30', water: false }, experiment: null, expHistory: [], supplements: [], lastBackup: null, onboarded: false });
   function load() {
     try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); o.settings = Object.assign(defaults(), o.settings || {}); o.days = o.days || {}; return o; } } catch (e) { /* pusty start */ }
     return { v: 1, settings: defaults(), days: {} };
@@ -453,6 +453,8 @@
       + rtog('water', 'Woda', 'Trzy razy dziennie: 11:00, 15:00 i 19:00')
       + '<button class="btn" data-a="ics" style="margin-top:10px">Dodaj do Kalendarza</button>'
       + '<p class="tiny muted" style="margin-top:8px">Pyszczek działa bez serwera, więc przypomnienia dodajesz do Kalendarza telefonu: po dotknięciu przycisku otwórz pobrany plik i wybierz „Dodaj wszystkie”. Alarmy będą działały nawet przy zamkniętej aplikacji. Gdy zmienisz godzinę, dodaj plik ponownie i usuń stare wydarzenia. Tego, że dziś nie ma wpisu, aplikacja przypomni sama po otwarciu.</p>');
+    const pt = st.pet || { on: true, caught: 0 };
+    h += card('Pyszczek, Twój zwierzak', '', '<div class="toggle" style="padding-top:0"><div><b>Pokazuj zwierzaka</b><div class="small muted">Podczas przewijania czasem wygląda zza krawędzi ekranu. Złap go dotknięciem, a dostaniesz buziaka w nosek.</div></div><button class="sw' + (pt.on ? ' on' : '') + '" role="switch" aria-checked="' + !!pt.on + '" aria-label="Pokazuj zwierzaka" data-a="pet-tog"></button></div>' + (window.__pyszczekPet ? '<div class="pets" role="radiogroup" aria-label="Wybierz zwierzaka">' + window.__pyszczekPet.KINDS.map((k) => '<button class="pk' + ((pt.kind || 'kot') === k[0] ? ' on' : '') + '" role="radio" aria-checked="' + ((pt.kind || 'kot') === k[0]) + '" data-a="pet-kind" data-v="' + k[0] + '">' + window.__pyszczekPet.face(false, k[0]) + '<span>' + k[1] + '</span></button>').join('') + '</div>' : '') + '<div class="kv"><span>Złapane Pyszczki</span><b>' + (pt.caught || 0) + '</b></div>');
     h += card('Raport na wizytę', '', '<p class="small muted" style="margin-bottom:10px">Zestawienie z ostatnich 90 dni do wydruku lub zapisu jako PDF, np. dla lekarza.</p><button class="btn" data-a="nav" data-t="report">Otwórz raport</button>');
     h += card('Moje dane', nDays + ' dni zapisanych', '<div class="btns"><button class="btn" data-a="export">Zapisz kopię zapasową</button><button class="btn ghost" data-a="import">Wczytaj kopię</button>'
       + (nDemo ? '<button class="btn ghost" data-a="demo-clear">Usuń dane przykładowe (' + nDemo + ' dni)</button>' : '<button class="btn ghost" data-a="demo-load">Wczytaj dane przykładowe</button>')
@@ -592,6 +594,8 @@
       case 'exp-end': { const ex = db.settings.experiment, ev = ex && I.evalExperiment(db, ex, TODAY()); if (ev) { db.settings.expHistory = (db.settings.expHistory || []).concat([{ title: ex.title, verdict: ev.verdict, date: TODAY() }]).slice(-12); db.settings.experiment = null; save(); render(); } break; }
       case 'rem': { db.settings.rem = Object.assign({}, db.settings.rem); db.settings.rem[k] = !db.settings.rem[k]; save(); render(); break; }
       case 'ics': downloadIcs(); break;
+      case 'pet-kind': { db.settings.pet = Object.assign({ on: true, caught: 0 }, db.settings.pet); db.settings.pet.kind = v; save(); render(); if (window.__pyszczekPet) window.__pyszczekPet.spawn(); break; }
+      case 'pet-tog': { db.settings.pet = Object.assign({ caught: 0 }, db.settings.pet); db.settings.pet.on = !db.settings.pet.on; save(); render(); break; }
       case 'date': { const t = TODAY(); S.date = el.dataset.d === 'today' ? t : A.addDays(S.date, Number(el.dataset.d)); if (S.date > t) S.date = t; render(); break; }
       case 'onboard': db.settings.onboarded = true; save(); render(); break;
       case 'set': { const d = day(S.date, true), n = Number(v); if (k === 'flow' && n === 0) delete d.flow; else if (d[k] === n) delete d[k]; else d[k] = n; clean(d, S.date); save(); render(); break; }
@@ -663,6 +667,6 @@
 
   /* start: jeśli dzień zmienił się, gdy karta była w tle */
   document.addEventListener('visibilitychange', () => { if (!document.hidden && S.tab === 'today' && S.date !== TODAY() && !S.touched) { /* zostaw wybraną datę */ } });
-  window.__pyszczek = { db: () => db, S, render };
+  window.__pyszczek = { db: () => db, S, render, save };
   render(true);
 })();
