@@ -29,15 +29,18 @@
       const date = A.addDays(start, i); if (i < n - 1 && r() < 0.07) { continue; }
       const ph = phaseOf(date); const d = { demo: true, meals: [], symptoms: {}, stressors: [] };
       const caffeine = clamp(Math.round(2 + gauss() * 1.2), 0, 5), alcohol = r() < 0.2 ? 1 + Math.floor(r() * 3) : 0, exercise = r() < 0.5 ? pick(r, [20, 30, 45, 60]) : 0;
+      const steps = Math.round(clamp(7200 + gauss() * 2400 + (exercise ? 1500 : 0), 1500, 16000) / 100) * 100, walkMin = Math.round(clamp(steps / 110 + gauss() * 6, 5, 120) / 5) * 5;
       const stressors = []; ['praca', 'relacje', 'pieniadze', 'czas', 'rodzina'].forEach((k) => { if (r() < (k === 'praca' ? 0.45 : 0.15)) stressors.push(k); });
       let stress = clamp(Math.round(3.8 + stressors.length * 1.0 + (ph.pms ? 1 : 0) + gauss() * 1.0), 1, 10);
       const sleepHours = Math.round(clamp(7.1 + gauss() * 0.9 - (prev.alcohol ? 0.3 : 0), 4.5, 9.5) * 2) / 2;
       const sleepQuality = clamp(Math.round(6 + 0.7 * (sleepHours - 7) - 0.6 * Math.max(0, prev.caffeine - 2) - 0.9 * prev.alcohol - 0.25 * (prev.stress - 5) + 0.01 * prev.exercise + gauss() * 0.9), 1, 10);
       const phMood = ph.ph === 'lutealna' ? (ph.pms ? -1.4 : -0.5) : ph.ph === 'menstruacja' ? -0.6 : ph.ph === 'owulacja' ? 0.5 : 0.2;
-      const mood = clamp(Math.round(6.4 + 0.6 * (sleepHours - 7) + 0.012 * exercise + phMood - 0.25 * (stress - 4.5) + gauss() * 0.9), 1, 10);
+      const mood = clamp(Math.round(6.4 + 0.6 * (sleepHours - 7) + 0.0003 * (steps - 7000) + 0.012 * exercise + phMood - 0.25 * (stress - 4.5) + gauss() * 0.9), 1, 10);
       const energy = clamp(Math.round(6.0 + 0.35 * (sleepQuality - 6) + 0.02 * exercise + (ph.ph === 'menstruacja' ? -0.9 : 0) - 0.15 * (stress - 4.5) - 0.2 * prev.alcohol + gauss() * 0.9), 1, 10);
       const water = Math.round(clamp(1700 + gauss() * 500, 600, 3000) / 250) * 250;
-      Object.assign(d, { mood, energy, stress, sleepHours, sleepQuality, caffeine, alcohol, exercise, water, stressors });
+      Object.assign(d, { mood, energy, stress, sleepHours, sleepQuality, caffeine, alcohol, exercise, water, stressors, steps, walkMin, obs: [] });
+      const addMin = (hm, m) => { const t = Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3)) + m; return String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+      let snacked = false;
       // posiłki
       let bloat = 0;
       [['śniadanie', '08:00', BREAKFAST], ['obiad', '13:30', LUNCH], ['kolacja', r() < 0.15 ? '21:30' : '19:00', DINNER], ['przekąska', '16:30', SNACK]].forEach(([type, time, list]) => {
@@ -50,8 +53,13 @@
         if (tags.has('cukier') && r() < 0.5) { bad.push('senność'); sc -= 0.3; }
         if (tags.has('wysokobłonnikowe')) sc += 0.2;
         const good = sc >= 4 && r() < 0.5 ? ['sytość'] : [];
-        d.meals.push({ id: 'd' + i + type, type, time, text, items: p.items, after: { score: clamp(Math.round(sc), 1, 5), tags: Array.from(new Set(bad.concat(good))) } });
+        if (type === 'przekąska') snacked = true;
+        const tt = Food.sumItems(p.items), hunger = clamp(Math.round(3 + gauss() * 0.9 + (type === 'obiad' ? 0.4 : 0) + (type === 'przekąska' ? -0.3 : 0)), 1, 5), sat = clamp(Math.round(2.0 + 0.04 * tt.p + 0.14 * tt.fib - 0.01 * tt.sug + gauss() * 0.55), 1, 5);
+        if (bad.includes('wzdęcie') && r() < 0.6) d.obs.push({ id: 'do' + i + type, t: addMin(time, 50 + Math.floor(r() * 70)), tag: 'wzdecie', sev: 1 + Math.floor(r() * 3), text: '' });
+        d.meals.push({ id: 'd' + i + type, type, time, text, hunger, sat, items: p.items, after: { score: clamp(Math.round(sc), 1, 5), tags: Array.from(new Set(bad.concat(good))) } });
       });
+      if (!snacked && r() < 0.6) d.obs.push({ id: 'dg' + i, t: addMin('17:00', Math.floor(r() * 50)), tag: 'glod', sev: 2 + Math.floor(r() * 2), text: r() < 0.5 ? 'mega głodna' : '' });
+      if (ph.ph === 'menstruacja' && r() < 0.6) d.obs.push({ id: 'dk' + i, t: addMin('17:30', Math.floor(r() * 40)), tag: 'skurcz', sev: 1 + Math.floor(r() * 3), text: 'skurcz brzucha' });
       // objawy
       const sym = d.symptoms; const sv = (p) => (r() < p ? 1 + Math.floor(r() * 3) : 0);
       if (sv(0.08 + (stress > 6 ? 0.25 : 0) + (water < 1250 ? 0.2 : 0))) sym.glowa = pick(r, [1, 2, 2, 3]);

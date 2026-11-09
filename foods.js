@@ -15,10 +15,10 @@
     return w;
   }
   const stem = (w) => stem1(stem1(w));
-  const STOP = new Set(['z', 'ze', 'i', 'w', 'we', 'na', 'po', 'do', 'od', 'oraz', 'plus', 'ok', 'ca', 'a', 'o', 'u', 'tak', 'jak', 'sie', 'dodatkiem', 'dodatek', 'troche', 'mala', 'duza', 'maly', 'duzy', 'sredni', 'srednia']);
+  const STOP = new Set(['z', 'ze', 'i', 'w', 'we', 'na', 'po', 'do', 'od', 'oraz', 'plus', 'ok', 'ca', 'a', 'o', 'u', 'tak', 'jak', 'sie', 'dodatkiem', 'dodatek', 'troche', 'mala', 'duza', 'maly', 'duzy', 'sredni', 'srednia', 'czubata', 'kopiasta', 'plaska', 'domowy', 'domowa', 'domowe', 'swiezy', 'swieza', 'swieze', 'mrozony', 'mrozona', 'mrozone', 'gotowany', 'gotowana', 'gotowane', 'pieczony', 'pieczona', 'pieczone', 'duszony', 'duszona', 'duszone', 'grillowany', 'grillowana', 'grillowane', 'surowy', 'surowa', 'surowe', 'ciepla', 'cieple', 'zimna', 'zimne', 'wegetarianski', 'wegetarianska', 'kilka', 'jakis', 'jakies', 'taki', 'cos']);
   const tokenize = (s) => norm(s).split(' ').filter(Boolean);
   const stemsOf = (s) => tokenize(s).filter((t) => !STOP.has(t)).map(stem);
-  const IGNORE = new Set(['smoothie', 'koktajl', 'shake', 'sniadanie', 'obiad', 'kolacja', 'przekaska', 'lunch', 'deser'].map(stem));
+  const IGNORE = new Set(['sol', 'pieprz', 'przyprawy', 'przyprawa', 'ziola', 'cynamon', 'imbir', 'kurkuma', 'curry', 'oregano', 'bazylia', 'smoothie', 'koktajl', 'shake', 'sniadanie', 'obiad', 'kolacja', 'przekaska', 'lunch', 'deser'].map(stem));
 
   /* ---------- BAZA ---------- */
   const FOODS = [];
@@ -181,10 +181,76 @@
   F('pierogi', 'pierogi|pierogow|pierogami|pieroga|uszka|kopytka|knedle|pyzy', 190, 5.5, 30, 5.5, 1.8, 1.5, 0.8, 50, 'gluten', 250, { piece: 35 });
   F('naleśniki', 'nalesnik|nalesniki|nalesnikow|placki|racuchy', 190, 6, 26, 7, 0.9, 5, 1.2, 80, 'gluten,nabiał', 80, { piece: 80 });
   F('kotlet panierowany', 'kotlet schabowy|schabowy|kotlet|panierowany|kotlet panierowany|nuggetsy|nuggets', 255, 18, 10, 15, 0.5, 0.5, 1, 20, 'gluten,smażone', 150, { piece: 120 });
-  F('zupa warzywna', 'zupa|zupy|zupe|jarzynowa|krupnik|pomidorowa|ogorkowa|zurek|barszcz|flaki', 45, 1.5, 6, 1.5, 1.2, 2, 0.4, 15, '', 350, { cup: 250, bowl: 350 });
-  F('zupa krem', 'zupa krem|krem z|krem dyniowy|krem', 60, 1.5, 8, 2.5, 1, 4, 0.4, 20, '', 350, { cup: 250, bowl: 350 });
+  F('zupa warzywna', 'zupa|zupy|zupe|zupa pomidorowa|zupa ogorkowa|zupa grzybowa|zupa fasolowa|zupa grochowa|zupa jarzynowa|zupa ziemniaczana|zupa pieczarkowa|zupa cebulowa|zupa kalafiorowa|zupa brokulowa|zupa szpinakowa|kapusniak|jarzynowa|krupnik|pomidorowa|ogorkowa|zurek|barszcz|flaki', 45, 1.5, 6, 1.5, 1.2, 2, 0.4, 15, '', 350, { cup: 250, bowl: 350 });
+  F('zupa krem', 'zupa krem|krem z|krem dyniowy|zupa dyniowa|krem z dyni|krem', 60, 1.5, 8, 2.5, 1, 4, 0.4, 20, '', 350, { cup: 250, bowl: 350 });
   F('rosół', 'rosol|rosolu', 25, 2, 1.5, 1.2, 0.3, 0.5, 0.3, 8, '', 300, { bowl: 300 });
-  F('sałatka', 'salatka|salatki|salatke|salatka warzywna', 60, 2, 7, 3, 2, 3, 0.8, 30, '', 250, { bowl: 250 });
+  F('sałatka', 'salatka|salatki|salatke|salatka warzywna|salatka jarzynowa|salatka z makaronem|salatka ryzowa', 60, 2, 7, 3, 2, 3, 0.8, 30, '', 250, { bowl: 250 });
+
+
+  /* ---------- rozszerzenie bazy (produkty ogólne, dania i nowe miarki) ---------- */
+  // warzywa i owoce (także "wrzutki" ogólne, gdy nie wiadomo dokładnie co)
+  F('mix warzyw', 'mix warzyw|mieszanka warzyw|mieszanka warzywna|warzywa mrozone|mrozone warzywa|warzywa na patelnie|warzywa z patelni|warzywa na parze|warzywa|warzyw|jarzyny|warzywa pieczone|warzywa z piekarnika|mix warzywny', 40, 2.2, 6.5, 0.4, 3, 3, 0.7, 28, '', 150, { cup: 130, handful: 40, tbsp: 10 });
+  F('mix owoców', 'mix owocow|salatka owocowa|owoce|owocow|mieszanka owocow|owoce sezonowe|owoce mrozone|mrozone owoce', 55, 0.8, 13, 0.3, 2, 10, 0.4, 15, '', 150, { cup: 150, handful: 40, tbsp: 10 });
+  F('surówka', 'surowka|surowki|surowke|coleslaw|surowka z kapusty|surowka z marchewki', 70, 1.2, 8, 3.5, 2, 5, 0.5, 30, '', 100, { tbsp: 20 });
+  F('sałatka grecka', 'salatka grecka|greckiej salatki|sałatka z fetą', 105, 3, 5, 8, 1.5, 3, 0.8, 90, 'nabiał', 250, { bowl: 250 });
+  F('sałatka z kurczakiem', 'salatka z kurczakiem|salatka cezar|cezar|salatka z tunczykiem|salatka z jajkiem', 130, 11, 6, 7, 1.5, 2, 0.9, 40, '', 300, { bowl: 300 });
+  F('cytryna', 'cytryna|cytryny|cytryne|limonka|limonki|sok z cytryny', 29, 1.1, 9, 0.3, 2.8, 2.5, 0.6, 26, '', 60, { piece: 60, tbsp: 15 }, { addG: 10 });
+  F('rzodkiewka', 'rzodkiewka|rzodkiewki|rzodkiewek', 16, 0.7, 3.4, 0.1, 1.6, 1.9, 0.3, 25, '', 50, { piece: 8 });
+  F('seler', 'seler|selera|seler naciowy|nac selera', 16, 0.7, 3, 0.2, 1.6, 1.3, 0.2, 40, '', 60, { piece: 40 });
+  F('por', 'por|pora|poru', 61, 1.5, 14, 0.3, 1.8, 3.9, 2.1, 59, '', 80, {});
+  F('fasolka szparagowa', 'fasolka szparagowa|fasolki szparagowej|fasolka', 31, 1.8, 7, 0.2, 2.7, 3.3, 1, 37, '', 120, {});
+  F('brukselka', 'brukselka|brukselki|brukselke', 43, 3.4, 9, 0.3, 3.8, 2.2, 1.4, 42, '', 120, {});
+  F('rukola', 'rukola|rukoli|rukole|roszponka|mix salat', 25, 2.6, 3.7, 0.7, 1.6, 2, 1.5, 160, '', 30, { handful: 20 });
+  F('szparagi', 'szparagi|szparagow|szparag', 20, 2.2, 3.9, 0.1, 2.1, 1.9, 2.1, 24, '', 100, {});
+  F('puree ziemniaczane', 'puree|pure ziemniaczane|ziemniaki puree|tluczone ziemniaki|pure', 90, 2, 15, 2.8, 1.5, 1.5, 0.5, 30, 'nabiał', 200, { tbsp: 25 });
+  F('placki ziemniaczane', 'placki ziemniaczane|placek ziemniaczany|placuszki ziemniaczane', 220, 4, 28, 10, 2, 1, 0.9, 15, 'smażone', 150, { piece: 60 });
+  F('bigos', 'bigos|bigosu', 130, 7, 5, 9, 2.5, 2, 1.5, 40, 'przetworzone', 250, { bowl: 300 });
+  F('gołąbki', 'golabki|golabek|golabka', 110, 6, 10, 5, 1.5, 2.5, 1, 30, '', 240, { piece: 120 });
+  F('leczo', 'leczo|ratatouille|gulasz warzywny', 70, 2, 7, 4, 2, 4, 0.7, 20, '', 250, { bowl: 300 });
+  F('gulasz', 'gulasz|gulaszu|chili con carne|chili|chilli', 130, 10, 6, 7, 2, 2.5, 1.8, 30, '', 250, { bowl: 300 });
+  F('lasagne', 'lasagne|lasagna|zapiekanka makaronowa', 150, 8, 16, 6, 1.5, 3, 1.2, 80, 'gluten,nabiał', 300, { piece: 300 });
+  F('zapiekanka', 'zapiekanka|zapiekanki|zapiekanke|tost z serem|tosty z serem', 230, 9, 28, 9, 1.5, 3, 1.5, 120, 'gluten,nabiał', 200, { piece: 200 });
+  F('wrap', 'wrap|wrapa|burrito|quesadilla|tortilla z nadzieniem', 200, 9, 25, 7, 2, 2, 1.5, 60, 'gluten', 250, { piece: 250 });
+  F('kotlet mielony', 'kotlet mielony|mielony|klopsy|klopsik|klopsiki|pulpety|pulpet|pulpecik|pulpeciki', 220, 14, 8, 14, 0.8, 1, 1.6, 40, 'gluten,smażone', 100, { piece: 80 });
+  // mięso, ryby
+  F('mięso (ogólnie)', 'mieso|mieszanka miesna|mieso mielone|mielone mieso|miesa|mieska', 200, 20, 0, 13, 0, 0, 2.5, 12, '', 120, {});
+  F('parówki', 'parowki|parowka|parowek|hot dog|hotdog|kabanos|kabanosy', 260, 11, 3, 23, 0, 1, 1, 20, 'przetworzone', 100, { piece: 50 });
+  F('śledź', 'sledz|sledzie|sledzia|rolmops', 200, 18, 0, 14, 0, 0, 1.1, 70, 'ryby', 80, { piece: 80 });
+  F('makrela', 'makrela|makrele|makreli|makrela wedzona', 205, 19, 0, 14, 0, 0, 1.6, 12, 'ryby', 100, {});
+  F('ryba smażona', 'ryba smazona|ryba|ryby|ryba panierowana|fish and chips|paluszki rybne|rybne', 230, 15, 12, 13, 0.6, 0.5, 0.9, 25, 'gluten,smażone,ryby', 150, { piece: 25 });
+  F('łosoś wędzony', 'losos wedzony|wedzony losos|lososia wedzonego', 180, 22, 0, 10, 0, 0, 0.9, 11, 'ryby', 50, { plast: 15 });
+  // nabiał, jaja i spółka
+  F('jogurt owocowy', 'jogurt owocowy|jogurt smakowy|jogurt z owocami|jogurt pitny|actimel|jogurt waniliowy', 90, 3.5, 14, 2, 0.2, 12, 0.1, 120, 'nabiał,laktoza,cukier', 150, { piece: 150, tbsp: 20 });
+  F('serek wiejski', 'serek wiejski|wiejski|cottage|ser wiejski', 98, 12, 3.5, 4.3, 0, 3, 0.1, 80, 'nabiał,laktoza', 150, { tbsp: 25, piece: 150 });
+  F('serek homogenizowany', 'serek homogenizowany|homogenizowany|serek waniliowy|serek smakowy', 130, 6, 14, 5, 0, 13, 0.1, 100, 'nabiał,laktoza,cukier', 140, { piece: 140 });
+  F('maślanka', 'maslanka|maslanki|maslanke', 40, 3.3, 4.7, 0.9, 0, 4.7, 0.1, 115, 'nabiał,laktoza', 250, { cup: 250 });
+  F('budyń', 'budyn|budyniu|kisiel|kisielu|galaretka|galaretke|deser mleczny', 85, 2.5, 15, 2, 0.2, 11, 0.2, 80, 'cukier,nabiał', 150, { piece: 150 });
+  F('tzatziki', 'tzatziki|dip jogurtowy|sos jogurtowy|sos czosnkowy', 80, 2.5, 3, 6.5, 0.3, 2.5, 0.2, 90, 'nabiał,laktoza', 40, { tbsp: 20 }, { addG: 40 });
+  F('sos śmietanowy', 'sos smietanowy|sos serowy|sos kremowy|sos|sosu|sosem|sos beszamelowy', 150, 2, 6, 13, 0.2, 2, 0.3, 50, 'nabiał', 60, { tbsp: 18 }, { addG: 50 });
+  F('pesto', 'pesto|sos pesto', 460, 5, 4, 46, 1.5, 2, 1.3, 200, 'nabiał,orzechy', 20, { tbsp: 18, tsp: 6 }, { addG: 20 });
+  F('guacamole', 'guacamole|guacamolle', 160, 2, 8, 15, 6, 0.7, 0.5, 12, '', 50, { tbsp: 20 }, { addG: 40 });
+  F('musztarda', 'musztarda|musztardy|musztarde|chrzan', 66, 4, 6, 3.3, 3, 2, 1.5, 63, '', 10, { tbsp: 15, tsp: 5 }, { addG: 8 });
+  F('sos pomidorowy', 'sos pomidorowy|sos pomidorowego|salsa|sos do makaronu|sos arrabiata', 50, 1.5, 8, 1.5, 1.5, 6, 0.8, 20, '', 100, { tbsp: 18 }, { addG: 80 });
+  // pieczywo, zboża, wypieki
+  F('croissant', 'croissant|rogalik|rogalika|croissanta|rogaliki', 406, 8, 46, 21, 2.4, 11, 1.8, 40, 'gluten,nabiał', 60, { piece: 60 });
+  F('krakersy', 'krakersy|krakers|sucharki|sucharek|chlebek chrupki|pieczywo chrupkie|ciastka ryzowe', 410, 10, 70, 9, 4, 3, 2.5, 40, 'gluten', 30, { piece: 5, handful: 25 });
+  F('gofry', 'gofr|gofry|gofra|gofrow|andruty', 290, 7, 37, 13, 1.4, 8, 1.4, 90, 'gluten,nabiał,cukier', 75, { piece: 75 });
+  F('bulgur', 'bulgur|bulguru|kasza bulgur', 83, 3, 19, 0.2, 4.5, 0.1, 1, 10, 'gluten', 150, { cup: 160 });
+  F('otręby', 'otreby|otrebow|otreby owsiane|otreby pszenne', 216, 16, 64, 4.3, 43, 0.4, 10.6, 73, 'gluten,wysokobłonnikowe', 15, { tbsp: 8 }, { addG: 10 });
+  F('mąka', 'maka|maki|maka pszenna|maka razowa', 364, 10, 76, 1, 2.7, 0.3, 1.2, 15, 'gluten', 20, { tbsp: 10, tsp: 3 }, { addG: 10 });
+  F('edamame', 'edamame|soja gotowana|soja', 121, 12, 9, 5, 5, 2, 2.3, 63, 'strączkowe', 100, { handful: 40 });
+  F('tempeh', 'tempeh|tempehu', 192, 20, 8, 11, 0, 0, 2.7, 111, 'strączkowe', 100, {});
+  // orzechy, słodycze, napoje
+  F('orzeszki ziemne', 'orzeszki ziemne|orzeszki|orzeszkow|fistaszki|orzeszki arachidowe', 585, 26, 16, 49, 8.5, 4, 4.6, 92, 'orzechy', 30, { handful: 30, tbsp: 10 });
+  F('pistacje', 'pistacje|pistacji|pistacja', 560, 20, 28, 45, 10, 8, 4, 105, 'orzechy', 30, { handful: 30 });
+  F('orzechy laskowe', 'orzechy laskowe|laskowe|laskowych', 628, 15, 17, 61, 10, 4.3, 4.7, 114, 'orzechy', 30, { handful: 30 });
+  F('cukierki', 'cukierki|cukierek|zelki|zelek|zelki zelatynowe|draze|lizak|zelkow', 380, 4, 85, 0.2, 0, 60, 0.5, 20, 'cukier', 30, { piece: 8, handful: 30 });
+  F('chałwa', 'chalwa|chalwy|chalwe|sezamki', 523, 12, 50, 30, 5, 38, 4.5, 140, 'cukier', 30, { piece: 30 });
+  F('baton proteinowy', 'baton proteinowy|protein bar|batonik proteinowy|baton proteinowe', 370, 33, 35, 12, 6, 5, 2, 150, '', 55, { piece: 55 });
+  F('syrop', 'syrop klonowy|syrop|syropu|syrop z agawy|melasa', 260, 0, 67, 0, 0, 60, 0.1, 70, 'cukier', 20, { tbsp: 20, tsp: 7 }, { addG: 15 });
+  F('kompot', 'kompot|kompotu|kompoty|woda smakowa|napoj niegazowany', 35, 0, 8.5, 0, 0, 8, 0, 5, 'cukier', 250, { cup: 250 });
+  F('kombucha', 'kombucha|kombuche|kombuchy|kwas chlebowy', 15, 0, 3.5, 0, 0, 3, 0, 2, '', 250, { cup: 250, piece: 330 });
+  F('gorąca czekolada', 'goraca czekolada|gorącej czekolady|czekolada na goraco|kakao na mleku', 85, 3, 12, 3, 0.8, 11, 0.5, 100, 'cukier,nabiał', 250, { cup: 250 });
 
   const byName = {};
   FOODS.forEach((f) => { byName[f.name] = f; });
@@ -195,6 +261,7 @@
     { name: 'jajecznica', aliases: ['jajecznica', 'jajecznicy', 'jajecznice'], items: [['jajko', 110], ['masło', 10]] },
     { name: 'omlet', aliases: ['omlet', 'omleta'], items: [['jajko', 110], ['mleko 2%', 30], ['oliwa z oliwek', 5]] },
     { name: 'kanapka', aliases: ['kanapka', 'kanapki', 'kanapke', 'kanapek'], items: [['chleb pszenny', 70], ['masło', 5]] },
+    { name: 'bolognese', aliases: ['spaghetti bolognese', 'bolognese', 'bolonskie', 'makaron z miesem mielonym'], items: [['makaron (ugotowany)', 180], ['wołowina', 80], ['passata pomidorowa', 100]] },
     { name: 'latte', aliases: ['latte', 'cappuccino', 'flat white', 'kawa latte'], items: [['kawa (czarna)', 100], ['mleko 2%', 200]] }
   ];
 
@@ -209,13 +276,49 @@
     INDEX.push({ kind: 'dish', ref: d, toks, score: toks.reduce((s, t) => s + t.length, 0) + 1 });
   }));
 
-  function matchBest(stems) {
+  function exactBest(stems) {
     let best = null;
     for (const e of INDEX) {
       if (!e.toks.every((t) => stems.includes(t))) continue;
       if (!best || e.score > best.score) best = e;
     }
     return best;
+  }
+  /* odległość edycyjna (Levenshtein), do literówek typu "brokół", "bananów" */
+  function lev(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 9;
+    const m = [], n = b.length; for (let j = 0; j <= n; j++) m[j] = j;
+    for (let i = 1; i <= a.length; i++) { let prev = m[0]; m[0] = i; for (let j = 1; j <= n; j++) { const t = m[j]; m[j] = Math.min(m[j] + 1, m[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; } }
+    return m[n];
+  }
+  let VOCAB = null;
+  const vocab = () => { if (!VOCAB) { VOCAB = new Set(); INDEX.forEach((e) => e.toks.forEach((t) => VOCAB.add(t))); } return VOCAB; };
+  function fuzzyMap(stems) {
+    const V = vocab(), map = {}; let changed = false;
+    stems.forEach((s) => {
+      if (V.has(s) || s.length < 5 || /\d/.test(s) || unitOf(s) || IGNORE.has(s)) return;
+      let bestV = null, bd = 9;
+      V.forEach((v) => { if (v.length < 4) return; const d = lev(s, v), lim = Math.max(s.length, v.length) >= 8 ? 2 : 1; if (d <= lim && d < bd) { bd = d; bestV = v; } });
+      if (bestV) { map[s] = bestV; changed = true; }
+    });
+    return changed ? map : null;
+  }
+  function matchBest(stems) {
+    const ex = exactBest(stems); if (ex) return ex;
+    const map = fuzzyMap(stems); if (!map) return null;
+    const mapped = stems.map((s) => map[s] || s), e = exactBest(mapped); if (!e) return null;
+    const orig = {}; Object.keys(map).forEach((k) => { orig[map[k]] = k; });
+    return Object.assign({}, e, { toks: e.toks.map((t) => orig[t] || t), fuzzy: true });
+  }
+  /* własne produkty użytkowniczki (zapamiętane na stałe) */
+  function setCustom(list) {
+    for (let i = INDEX.length - 1; i >= 0; i--) if (INDEX[i].ref && INDEX[i].ref.custom) INDEX.splice(i, 1);
+    (list || []).forEach((c, k) => {
+      if (!c || !c.name || !c.per100) return;
+      const f = { id: 'c' + k, name: c.name, aliases: [c.name], per100: Object.assign({ kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, fe: 0, ca: 0 }, c.per100), tags: c.tags || [], defG: c.defG || 100, units: c.units || {}, custom: true };
+      const toks = stemsOf(c.name); if (toks.length) INDEX.push({ kind: 'food', ref: f, toks, score: toks.reduce((s, t) => s + t.length, 0) + 3 });
+    });
+    VOCAB = null;
   }
 
   /* ---------- ILOŚCI ---------- */
@@ -224,7 +327,7 @@
     ['g', /^(g|gr|gram|gramy|gramow)$/], ['kg', /^(kg|kilo|kilogram\w*)$/], ['dag', /^dag$/], ['ml', /^ml$/], ['l', /^(l|litr\w*)$/],
     ['tbsp', /^(lyzka|lyzki|lyzke|lyzek|lyzce|lyzkami)$/], ['tsp', /^lyzecz\w*$/], ['cup', /^szklank\w*$/], ['mug', /^(kubek|kubka|kubki|kubeczek)$/],
     ['filiz', /^filizank\w*$/], ['piece', /^(szt|sztuk\w*|sztuka)$/], ['slice', /^kromk\w*$/], ['plast', /^plast\w*$/], ['handful', /^gars\w*$/],
-    ['cube', /^kostk\w*$/], ['kawal', /^(kawal\w*)$/], ['portion', /^porcj\w*$/], ['bowl', /^(miseczk\w*|misk\w*)$/], ['can', /^puszk\w*$/], ['pack', /^(opakowan\w*|paczk\w*|sloik\w*)$/]
+    ['cube', /^kostk\w*$/], ['kawal', /^(kawal\w*)$/], ['portion', /^porcj\w*$/], ['bowl', /^(miseczk\w*|misk\w*)$/], ['can', /^puszk\w*$/], ['scoop', /^(kulk\w*|gaka\w*)$/], ['bottle', /^butelk\w*$/], ['glass', /^kieliszk\w*$/], ['pinch', /^szczypt\w*$/], ['pack', /^(opakowan\w*|paczk\w*|sloik\w*)$/]
   ];
   const unitOf = (t) => { for (const [u, rx] of UNIT_RX) if (rx.test(t)) return u; return null; };
 
@@ -244,7 +347,8 @@
     if (qty === null) { for (let i = 0; i < tokens.length; i++) { const u = unitOf(tokens[i]); if (u && u !== 'g' && u !== 'ml') { qty = 1; unit = u; used.add(i); break; } } }
     let mult = 1;
     if (tokens.includes('duzy') || tokens.includes('duza') || tokens.includes('duze')) mult = 1.3;
-    if (tokens.includes('maly') || tokens.includes('mala') || tokens.includes('male')) mult = 0.7;
+    if (tokens.includes('maly') || tokens.includes('mala') || tokens.includes('male') || tokens.includes('plaska') || tokens.includes('plaska')) mult = 0.7;
+    if (tokens.includes('czubata') || tokens.includes('kopiasta') || tokens.includes('czubatych')) mult = 1.5;
     return { qty, unit, mult, rest: tokens.filter((_, i) => !used.has(i)) };
   }
 
@@ -254,8 +358,8 @@
       case 'g': case 'ml': return qty;
       case 'kg': case 'l': return qty * 1000;
       case 'dag': return qty * 10;
-      case 'tbsp': return qty * (u.tbsp || 15);
-      case 'tsp': return qty * (u.tsp || 5);
+      case 'tbsp': return qty * (u.tbsp || 15) * mult;
+      case 'tsp': return qty * (u.tsp || 5) * mult;
       case 'cup': return qty * (u.cup || 250);
       case 'mug': return qty * (u.cup || 250);
       case 'filiz': return qty * Math.min(u.cup || 250, 150);
@@ -265,6 +369,10 @@
       case 'cube': return qty * (u.cube || 5);
       case 'bowl': return qty * (u.bowl || food.defG * 1.2);
       case 'can': return qty * (u.can || food.defG);
+      case 'scoop': return qty * (u.scoop || 50);
+      case 'bottle': return qty * (u.bottle || u.piece || 500);
+      case 'glass': return qty * (u.glass || u.piece || 150);
+      case 'pinch': return qty * 1;
       case 'piece': case 'kawal': return qty * (u.piece || food.defG) * mult;
       case 'portion': case 'pack': return qty * food.defG;
       default: return qty * (u.piece || food.defG) * mult;
@@ -360,7 +468,8 @@
   function search(q, limit) {
     const qs = stemsOf(q); if (!qs.length) return [];
     const res = [];
-    FOODS.forEach((f) => {
+    const pool = FOODS.concat(INDEX.filter((e) => e.ref && e.ref.custom).map((e) => e.ref));
+    pool.forEach((f) => {
       let best = 0;
       f.aliases.forEach((a) => {
         const as = stemsOf(a); const hit = qs.filter((s) => as.some((x) => x === s || (s.length >= 3 && x.startsWith(s)))).length;
@@ -381,5 +490,5 @@
     if (/smazon|frytk|chips|panier/.test(n)) t.push('smażone');
     return t;
   }
-  return { FOODS, DISHES, KEYS, norm, stem, parseMeal, itemTotals, sumItems, search, fromFood, guessTags, toGrams, unitOf };
+  return { FOODS, DISHES, KEYS, norm, stem, parseMeal, itemTotals, sumItems, search, fromFood, guessTags, toGrams, unitOf, setCustom };
 });

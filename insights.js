@@ -20,7 +20,7 @@
 
   /* ---- 1. Wyjaśnij dzień ---- */
   /* czynniki: [klucz, opóźnienie względem dnia ocenianego: 0 = ten sam dzień, 1 = poprzedni dzień] */
-  const DRIVERS = [['sleepHours', 0], ['sleepQuality', 0], ['water', 0], ['exerciseMin', 0], ['caffeine', 1], ['alcohol', 1], ['stressors', 0]];
+  const DRIVERS = [['sleepHours', 0], ['sleepQuality', 0], ['water', 0], ['exerciseMin', 0], ['steps', 0], ['walkMin', 0], ['caffeine', 1], ['alcohol', 1], ['stressors', 0]];
   function explainDay(db, date, targetKey) {
     const tk = targetKey || 'wbCore', recs = A.buildRecords(db.days || {}), by = {}; recs.forEach((r) => { by[r.date] = r; });
     const rec = by[date]; if (!rec || !isNum(rec[tk])) return { ok: false, reason: 'Dla tego dnia brak wpisu o samopoczuciu.' };
@@ -104,5 +104,55 @@
     return res;
   }
 
-  return { explainDay, extremeDay, whatIf, weekdays, evalExperiment, DOW, DOW3, dow };
+
+  /* ---- 5. Obserwacje z godziną a posiłki ---- */
+  const toMin = (t) => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const mealTot = (m) => { const o = { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0 }; (m.items || []).forEach((it) => { const k = (Number(it.grams) || 0) / 100, p = it.per100 || {}; Object.keys(o).forEach((x) => { o[x] += (p[x] || 0) * k; }); }); return o; };
+  function binomP(k, n, p) { /* P(X >= k) dla Bin(n, p) */
+    let s = 0, c = 1; const lp = Math.log(p), lq = Math.log(1 - p); let lg = 0;
+    const lf = [0]; for (let x = 1; x <= n; x++) lf[x] = lf[x - 1] + Math.log(x);
+    for (let x = k; x <= n; x++) { lg = lf[n] - lf[x] - lf[n - x] + x * lp + (n - x) * lq; s += Math.exp(lg); }
+    return Math.min(1, s);
+  }
+  function obsAnalysis(db, today) {
+    const days = db.days || {}, entries = [];
+    Object.keys(days).filter((d) => !today || d <= today).forEach((d) => (days[d].obs || []).forEach((o) => { const t = toMin(o.t); if (t !== null && o.tag) entries.push({ date: d, t, tag: o.tag, sev: o.sev || 1, text: o.text || '' }); }));
+    const byTag = {}; entries.forEach((e) => { (byTag[e.tag] = byTag[e.tag] || []).push(e); });
+    const allMeals = []; Object.keys(days).filter((d) => !today || d <= today).forEach((d) => (days[d].meals || []).forEach((m) => { const t = toMin(m.time); if (t !== null) allMeals.push({ date: d, t, m }); }));
+    const rows = [];
+    Object.keys(byTag).forEach((tag) => {
+      const list = byTag[tag]; if (list.length < 4) return;
+      const hours = list.map((e) => e.t / 60), buckets = {}; list.forEach((e) => { const h = Math.floor(e.t / 60); buckets[h] = (buckets[h] || 0) + 1; });
+      const peak = Object.keys(buckets).reduce((m, h) => buckets[h] > (buckets[m] || 0) ? h : m, Object.keys(buckets)[0]);
+      const near = list.map((e) => { let best = null; allMeals.filter((x) => x.date === e.date && x.t <= e.t && e.t - x.t <= 180).forEach((x) => { if (!best || x.t > best.t) best = x; }); return best; });
+      const withMeal = near.filter(Boolean).length, row = { tag, n: list.length, peak: Number(peak), peakN: buckets[peak], withMeal, avgSev: A.mean(list.map((e) => e.sev)), foods: [] };
+      /* które cechy posiłków poprzedzają obserwację częściej, niż wynika z ich udziału w posiłkach */
+      const cand = {}; allMeals.forEach((x) => (x.m.items || []).forEach((it) => (it.tags || []).forEach((t) => { cand[t] = 1; })));
+      Object.keys(cand).forEach((t) => {
+        const hasTag = (x) => (x.m.items || []).some((it) => (it.tags || []).indexOf(t) >= 0), base = allMeals.filter(hasTag).length / Math.max(1, allMeals.length), k = near.filter((x) => x && hasTag(x)).length;
+        if (withMeal >= 4 && base > 0.03 && base < 0.9 && k >= 3) { const p = binomP(k, withMeal, base); if (p < 0.1) row.foods.push({ tag: t, k, n: withMeal, base, p }); }
+      });
+      row.foods.sort((a, b) => a.p - b.p); row.foods = row.foods.slice(0, 2); rows.push(row);
+    });
+    rows.sort((a, b) => b.n - a.n); return { rows, total: entries.length };
+  }
+
+  /* ---- 6. Głód i sytość ---- */
+  function satiety(db, today) {
+    const days = db.days || {}, ms = [];
+    Object.keys(days).sort().filter((d) => !today || d <= today).forEach((d) => { const arr = (days[d].meals || []).slice().sort((a, b) => (a.time || '').localeCompare(b.time || '')); arr.forEach((m, k) => { const t = mealTot(m), prev = k ? toMin(arr[k - 1].time) : null, cur = toMin(m.time); ms.push({ date: d, m, t, hun: isNum(m.hunger) ? m.hunger : null, sat: isNum(m.sat) ? m.sat : null, gap: prev !== null && cur !== null && cur > prev ? (cur - prev) / 60 : null }); }); });
+    const out = { n: ms.filter((x) => x.sat !== null).length, nh: ms.filter((x) => x.hun !== null).length, rows: [], foods: [], gap: null, avgSat: null };
+    const sm = ms.filter((x) => x.sat !== null); if (sm.length) out.avgSat = A.mean(sm.map((x) => x.sat));
+    const DRV = [['p', 'Białko', ' g'], ['fib', 'Błonnik', ' g'], ['sug', 'Cukry', ' g'], ['f', 'Tłuszcz', ' g'], ['c', 'Węglowodany', ' g'], ['kcal', 'Kalorie', ' kcal']];
+    if (sm.length >= 12) DRV.forEach(([k, label]) => { const X = sm.map((x) => x.t[k]), Y = sm.map((x) => x.sat), rho = A.spearman(X, Y); if (rho === null) return; const p = A.pRho(rho, X.length); if (p < 0.1 && Math.abs(rho) >= 0.25) out.rows.push({ key: k, label, rho, p, n: X.length }); });
+    out.rows.sort((a, b) => a.p - b.p);
+    /* produkty (po nazwie) z najwyższą / najniższą sytością */
+    const byFood = {}; sm.forEach((x) => { const seen = {}; (x.m.items || []).forEach((it) => { if ((Number(it.grams) || 0) < 20 || seen[it.name]) return; seen[it.name] = 1; (byFood[it.name] = byFood[it.name] || []).push(x.sat); }); });
+    const overall = out.avgSat; Object.keys(byFood).forEach((n) => { if (byFood[n].length >= 4) out.foods.push({ name: n, n: byFood[n].length, mean: A.mean(byFood[n]), diff: A.mean(byFood[n]) - overall }); });
+    out.foods.sort((a, b) => b.diff - a.diff); out.foodsTop = out.foods.filter((f) => f.diff >= 0.5).slice(0, 3); out.foodsLow = out.foods.filter((f) => f.diff <= -0.5).slice(-3).reverse();
+    const gm = ms.filter((x) => x.hun !== null && x.gap !== null); if (gm.length >= 12) { const rho = A.spearman(gm.map((x) => x.gap), gm.map((x) => x.hun)); if (rho !== null) { const p = A.pRho(rho, gm.length); if (p < 0.1 && Math.abs(rho) >= 0.25) out.gap = { rho, p, n: gm.length }; } }
+    return out;
+  }
+
+  return { explainDay, extremeDay, whatIf, weekdays, evalExperiment, obsAnalysis, satiety, DOW, DOW3, dow };
 });

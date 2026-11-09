@@ -23,7 +23,9 @@
     water: { label: 'Woda', unit: ' ml', dec: 0, good: 1 },
     caffeine: { label: 'Kofeina', unit: ' porcji', dec: 1, good: -1 },
     alcohol: { label: 'Alkohol', unit: ' porcji', dec: 1, good: -1 },
-    exerciseMin: { label: 'Ruch', unit: ' min', dec: 0, good: 1 },
+    exerciseMin: { label: 'Ćwiczenia', unit: ' min', dec: 0, good: 1 },
+    steps: { label: 'Kroki', unit: ' kroków', dec: 0, good: 1 },
+    walkMin: { label: 'Spacer', unit: ' min', dec: 0, good: 1 },
     kcal: { label: 'Kalorie', unit: ' kcal', dec: 0, good: 0 },
     protein: { label: 'Białko', unit: ' g', dec: 0, good: 1 },
     carbs: { label: 'Węglowodany', unit: ' g', dec: 0, good: 0 },
@@ -157,14 +159,14 @@
   function mealAfterAvg(d) { const v = dayMeals(d).map((m) => m.after && m.after.score).filter(isNum); return v.length ? mean(v) : null; }
 
   function buildRecords(days) {
-    const dates = Object.keys(days).sort(); const recs = [];
+    const tdy = todayISO(); const dates = Object.keys(days).sort().filter((x) => x <= tdy); const recs = [];
     dates.forEach((date) => {
       const d = days[date]; const ci = checkedIn(d); const t = dayTotals(d); const full = t.meals > 0 && t.kcal >= 600;
       const r = {
         date, ci, mood: isNum(d.mood) ? d.mood : null, energy: isNum(d.energy) ? d.energy : null, stress: isNum(d.stress) ? d.stress : null,
         sleepHours: isNum(d.sleepHours) ? d.sleepHours : null, sleepQuality: isNum(d.sleepQuality) ? d.sleepQuality : null,
         water: isNum(d.water) ? d.water : null, caffeine: isNum(d.caffeine) ? d.caffeine : null, alcohol: isNum(d.alcohol) ? d.alcohol : null,
-        exerciseMin: isNum(d.exercise) ? d.exercise : null,
+        exerciseMin: isNum(d.exercise) ? d.exercise : null, steps: isNum(d.steps) ? d.steps : null, walkMin: isNum(d.walkMin) ? d.walkMin : null,
         kcal: full ? t.kcal : null, protein: full ? t.p : null, carbs: full ? t.c : null, fat: full ? t.f : null, fiber: full ? t.fib : null,
         sugar: full ? t.sug : null, iron: full ? t.fe : null, calcium: full ? t.ca : null, afterAvg: mealAfterAvg(d),
         symptoms: ci ? symTotal(d) : null, stressors: ci ? (d.stressors || []).length : null, flow: d.flow || 0, wellbeing: wellbeing(d), wbCore: wellbeingCore(d)
@@ -201,8 +203,9 @@
   const H = (xs, ys, lags) => xs.forEach((x) => ys.forEach((y) => lags.forEach((l) => { if (x !== y || l) HYP.push([x, y, l]); })));
   H(['sleepHours', 'sleepQuality'], ['mood', 'energy', 'stress', 'symptoms', 'sym_glowa', 'sym_zmeczenie', 'sym_mgla'], [0]);
   H(['stress'], ['symptoms', 'sym_glowa', 'sym_wzdecia', 'sym_zgaga', 'sym_brzuch', 'energy', 'afterAvg'], [0]);
-  H(['stress', 'caffeine', 'alcohol', 'exerciseMin', 'sugar', 'stressors'], ['sleepQuality', 'sleepHours'], [1]);
-  H(['exerciseMin'], ['mood', 'energy', 'stress'], [0, 1]);
+  H(['stress', 'caffeine', 'alcohol', 'exerciseMin', 'steps', 'walkMin', 'sugar', 'stressors'], ['sleepQuality', 'sleepHours'], [1]);
+  H(['exerciseMin', 'steps', 'walkMin'], ['mood', 'energy', 'stress'], [0, 1]);
+  H(['steps', 'walkMin'], ['sleepQuality', 'sym_zmeczenie'], [0, 1]);
   H(['water'], ['sym_glowa', 'energy', 'sym_zmeczenie', 'sym_wzdecia'], [0]);
   H(['caffeine'], ['stress', 'energy', 'sym_glowa'], [0]);
   H(['alcohol'], ['mood', 'energy', 'sym_glowa', 'stress'], [1]);
@@ -213,7 +216,7 @@
   H(['fat'], ['afterAvg', 'sym_zgaga'], [0]);
   H(['iron'], ['energy', 'sym_zmeczenie'], [0, 1]);
   H(['stressors'], ['mood'], [0]);
-  H(['sleepHours', 'sleepQuality', 'exerciseMin', 'water', 'caffeine', 'alcohol', 'sugar', 'fiber', 'protein', 'stressors'], ['wbCore'], [0, 1]);
+  H(['sleepHours', 'sleepQuality', 'exerciseMin', 'steps', 'walkMin', 'water', 'caffeine', 'alcohol', 'sugar', 'fiber', 'protein', 'stressors'], ['wbCore'], [0, 1]);
 
   function pairs(recs, xk, yk, lag, from) {
     const by = {}; recs.forEach((r) => { by[r.date] = r; }); const X = [], Y = [], D = [];
@@ -427,7 +430,9 @@
     const R5 = (v, s) => Math.round(v / s) * s;
     const T = {
       sleepHours: { v: Math.max(up(med), 7), dir: 'up', txt: (t) => 'Przez 7 dni połóż się tak, by spać co najmniej ' + fmt(t, 1) + ' h.' },
-      exerciseMin: { v: Math.max(15, Math.ceil(med / 5) * 5), dir: 'up', txt: (t) => 'Przez 7 dni zaplanuj ruch co najmniej ' + t + ' min dziennie, np. spacer.' },
+      exerciseMin: { v: Math.max(15, Math.ceil(med / 5) * 5), dir: 'up', txt: (t) => 'Przez 7 dni zaplanuj ćwiczenia co najmniej ' + t + ' min dziennie.' },
+      steps: { v: Math.max(6000, R5(med + 1500, 500)), dir: 'up', txt: (t) => 'Przez 7 dni zrób co najmniej ' + t + ' kroków dziennie.' },
+      walkMin: { v: Math.max(20, R5(med + 10, 5)), dir: 'up', txt: (t) => 'Przez 7 dni idź na spacer co najmniej ' + t + ' min dziennie.' },
       water: { v: Math.max(R5(Math.max(med, 1500), 250), 1500), dir: 'up', txt: (t) => 'Przez 7 dni pij co najmniej ' + t + ' ml wody dziennie.' },
       caffeine: { v: Math.floor(med), dir: 'down', txt: (t) => t >= 1 ? 'Przez 7 dni ogranicz kofeinę do ' + t + ' porcji dziennie i nie pij kawy po południu.' : 'Przez 7 dni spróbuj obejść się bez kofeiny albo pić ją tylko rano.' },
       alcohol: { v: Math.floor(med), dir: 'down', txt: (t) => t >= 1 ? 'Przez 7 dni ogranicz alkohol do ' + t + ' porcji lub mniej.' : 'Przez 7 dni spróbuj obyć się bez alkoholu.' },
@@ -441,7 +446,7 @@
 
   /* ---------- GŁÓWNA FUNKCJA ---------- */
   function analyze(db, opts) {
-    opts = opts || {}; const today = opts.today || todayISO(); const days = db.days || {}; const settings = db.settings || {};
+    opts = opts || {}; const today = opts.today || todayISO(); const days = {}; Object.keys(db.days || {}).forEach((k) => { if (k <= today) days[k] = db.days[k]; }); const settings = db.settings || {};
     const recs = buildRecords(days); const from = opts.range ? addDays(today, -(opts.range - 1)) : null;
     const inRange = recs.filter((r) => !from || r.date >= from);
     const checked = inRange.filter((r) => r.ci).length;
