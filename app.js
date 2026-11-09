@@ -38,7 +38,7 @@
   const GLASS = 250, CUP = 300, BOTTLE = 500;
   const glassTxt = (ml) => { const n = Math.round(ml / GLASS * 2) / 2; return fmt(n, n % 1 ? 1 : 0) + ' ' + plPl(n, 'szklanka', 'szklanki', 'szklanek'); };
   const OBS_TAGS = [['glod', 'Głód'], ['zachcianka', 'Zachcianka'], ['skurcz', 'Skurcz brzucha'], ['wzdecie', 'Wzdęcie'], ['zgaga', 'Zgaga'], ['nudnosci', 'Nudności'], ['glowa', 'Ból głowy'], ['senność', 'Senność'], ['spadek', 'Spadek energii'], ['przyplyw', 'Przypływ energii'], ['napiecie', 'Napięcie'], ['inne', 'Inne']];
-  const obsName = (k) => (OBS_TAGS.find((x) => x[0] === k) || [k, k])[1];
+  const obsName = (k) => { const f = OBS_TAGS.find((x) => x[0] === k); if (f) return f[1]; k = String(k || ''); return k.charAt(0).toUpperCase() + k.slice(1); };
   const SEV = ['', 'lekko', 'średnio', 'mocno'];
   const HUNGER = ['', 'brak', 'lekki', 'średni', 'duży', 'wilczy'], SAT = ['', 'wciąż głodna', 'trochę głodna', 'syta', 'bardzo syta', 'przejedzona'];
   const nowHM = () => { const n = new Date(); return String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0'); };
@@ -65,9 +65,14 @@
   const phaseHint = { menstruacja: 'Energia bywa niższa. Zadbaj o odpoczynek i produkty z żelazem.', folikularna: 'Zwykle energia i nastrój rosną.', owulacja: 'Często szczyt energii i nastroju.', lutealna: 'Możliwe objawy PMS: ochota na słodycze, wahania nastroju.' };
 
   /* ---------- DZIŚ ---------- */
+  const ICO = {
+    feel: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5q3.5 3 7 0M9 9.5h.01M15 9.5h.01"/>', sleep: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+    habits: '<path d="M12 3s6 6.2 6 10.5a6 6 0 0 1-12 0C6 9.2 12 3 12 3z"/>', symptoms: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>', stress: '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>',
+    cycle: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', supp: '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="m9.5 8.5 6 6"/>', note: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'
+  };
   function acc(id, title, sum, done, body) {
     const open = !!S.open[id];
-    return '<section class="acc' + (open ? ' open' : '') + (done ? ' done' : '') + '" id="sec-' + id + '"><button class="acc-hd" data-a="sec" data-id="' + id + '" aria-expanded="' + open + '"><span class="tick" aria-hidden="true"></span><span class="acc-t"><b>' + title + '</b><small>' + sum + '</small></span><span class="chev" aria-hidden="true"></span></button>' + (open ? '<div class="acc-bd">' + body + '</div>' : '') + '</section>';
+    return '<section class="acc' + (open ? ' open' : '') + (done ? ' done' : '') + '" id="sec-' + id + '"><button class="acc-hd" data-a="sec" data-id="' + id + '" aria-expanded="' + open + '"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + (ICO[id] || ICO.note) + '</svg></span><span class="acc-t"><b>' + title + '</b><small>' + sum + '</small></span><span class="chev" aria-hidden="true"></span></button>' + (open ? '<div class="acc-bd">' + body + '</div>' : '') + '</section>';
   }
   function expToday(date) {
     const ex = db.settings.experiment; if (!ex) return '';
@@ -82,15 +87,15 @@
     ev.sort((a, b) => a.t.localeCompare(b.t));
     return '<div class="tl">' + ev.map((e) => {
       if (e.m) { const m = e.m, t = Fd.sumItems(m.items); const hs = (isNum(m.hunger) ? 'głód przed: ' + HUNGER[m.hunger] : '') + (isNum(m.hunger) && isNum(m.sat) ? ' · ' : '') + (isNum(m.sat) ? 'sytość po: ' + SAT[m.sat] : ''); return '<div class="tl-i meal"><span class="tl-t">' + esc(e.t) + '</span><div class="tl-b"><b>' + esc(m.type || 'Posiłek') + '</b> <span class="small muted">' + (hide() ? '' : r0(t.kcal) + ' kcal') + '</span><div class="small">' + m.items.slice(0, 4).map((it) => esc(it.name.replace(/ \(.*\)$/, ''))).join(', ') + (m.items.length > 4 ? '…' : '') + '</div>' + (hs ? '<div class="tiny muted">' + hs + '</div>' : '') + '</div></div>'; }
-      const o = e.o; return '<div class="tl-i obs"><span class="tl-t">' + esc(e.t) + '</span><div class="tl-b"><b>' + esc(obsName(o.tag)) + '</b>' + (o.sev ? ' <span class="tag bad">' + SEV[o.sev] + '</span>' : '') + (o.text ? '<div class="small">' + esc(o.text) + '</div>' : '') + '</div><button class="del" data-a="ob-del" data-id="' + o.id + '" aria-label="Usuń wpis z godziny ' + esc(o.t) + '">×</button></div>';
+      const o = e.o; return '<div class="tl-i obs"><span class="tl-t">' + esc(e.t) + '</span><div class="tl-b"><b>' + esc(obsName(o.tag)) + '</b>' + (o.sev ? ' <span class="tag bad">' + SEV[o.sev] + '</span>' : '') + (o.text && o.text.toLowerCase() !== String(o.tag).toLowerCase() ? '<div class="small">' + esc(o.text) + '</div>' : '') + '</div><button class="del" data-a="ob-del" data-id="' + o.id + '" aria-label="Usuń wpis z godziny ' + esc(o.t) + '">×</button></div>';
     }).join('') + '</div>';
   }
   function obsForm(date) {
     const t = TODAY(); S.ob = S.ob || { t: date === t ? nowHM() : '09:00', tag: null, sev: 2, text: '' }; const o = S.ob;
-    return '<div class="grid2" style="grid-template-columns:110px 1fr;align-items:end"><div><label class="lb" for="ob-t">Godzina</label><input id="ob-t" type="time" data-i="ob-t" value="' + esc(o.t) + '"></div><div><label class="lb" for="ob-x">Opis (opcjonalnie)</label><input id="ob-x" type="text" data-i="ob-text" placeholder="np. mega głodna" value="' + esc(o.text) + '" autocomplete="off"></div></div>'
+    return '<div class="grid2" style="grid-template-columns:110px 1fr;align-items:end"><div><label class="lb" for="ob-t">Godzina</label><input id="ob-t" type="time" data-i="ob-t" value="' + esc(o.t) + '"></div><div><label class="lb" for="ob-x">Co się dzieje?</label><input id="ob-x" type="text" data-i="ob-text" placeholder="np. ucisk w klatce" value="' + esc(o.text) + '" autocomplete="off"></div></div>'
       + '<div class="chips" style="margin-top:10px">' + OBS_TAGS.map(([k, l]) => '<button class="chip' + (o.tag === k ? ' on' : '') + '" data-a="ob-tag" data-v="' + k + '">' + l + '</button>').join('') + '</div>'
       + '<div class="small b" style="margin-top:12px">Jak mocno?</div><div class="chips" style="margin-top:6px">' + [1, 2, 3].map((v) => '<button class="chip rose' + (o.sev === v ? ' on' : '') + '" data-a="ob-sev" data-v="' + v + '">' + SEV[v] + '</button>').join('') + '</div>'
-      + '<button class="btn primary" data-a="ob-add" style="margin-top:12px">Dodaj do osi dnia</button>';
+      + '<button class="btn primary" data-a="ob-add" style="margin-top:12px">Dodaj z godziną</button>';
   }
   function viewToday() {
     const date = S.date, d = db.days[date] || {}, st = db.settings, tg = A.targets(st), cyc = A.cycleInfo(db.days, st);
@@ -112,6 +117,19 @@
 
     h += '<section class="card hero ' + (wb == null ? 'm0' : wb < 35 ? 'm1' : wb < 55 ? 'm2' : wb < 75 ? 'm3' : 'm4') + (S.seen ? '' : ' intro') + '"><div class="face">' + C.face(wb, 112) + '</div><div style="min-width:0"><div class="score' + (wb == null ? ' none' : '') + '">' + (wb == null ? '–' : wb + '<small>/100</small>') + '</div><div class="lbl">' + wbLabel(wb) + '</div><div class="small muted">' + done + ' z 5 sekcji uzupełnionych</div>' + nextBtn + (streak >= 2 && date === t ? '<div class="small b" style="color:var(--brand-600)">' + streak + ' dni wpisów z rzędu</div>' : '') + prog(done, 5) + '</div></section>';
 
+    {
+      const wk = []; for (let i = 6; i >= 0; i--) wk.push(A.addDays(date > t ? t : date, -i));
+      const lv = (v) => v == null ? 'n' : v < 35 ? '1' : v < 55 ? '2' : v < 75 ? '3' : '4';
+      const WD = ['n', 'p', 'w', 'ś', 'c', 'p', 's'];
+      h += '<section class="card wkc"><div class="card-hd"><h2>Ostatnie 7 dni</h2><span class="hint">dotknij dzień</span></div><div class="wk7">' + wk.map((x) => { const w = A.wellbeing(db.days[x]); return '<button class="wd l' + lv(w) + (x === date ? ' sel' : '') + '" data-a="xopen" data-d="' + x + '" aria-label="' + longDate(x) + (w == null ? ', brak danych' : ', wskaźnik ' + w) + '"><i>' + (w == null ? '–' : w) + '</i><span>' + WD[dateObj(x).getDay()] + '</span></button>'; }).join('') + '</div></section>';
+      const pc = (v, g) => g ? Math.max(0, Math.min(100, Math.round(v / g * 100))) : 0;
+      const tile = (sec, label, val, unit, pct, cls) => '<button class="gt ' + cls + '" data-a="sec-go" data-id="' + sec + '" style="--p:' + pct + '"><span class="gr"><b>' + pct + '<small>%</small></b></span><span class="gl">' + label + '</span><span class="gv">' + val + '<small> ' + unit + '</small></span></button>';
+      h += '<div class="goals">'
+        + tile('sleep', 'Sen', isNum(d.sleepHours) ? fmt(d.sleepHours, 1) : '–', 'h', pc(d.sleepHours || 0, 8), 'g-sleep')
+        + tile('habits', 'Płyny', fmt((d.water || 0) / GLASS, (d.water || 0) % GLASS ? 1 : 0), 'z ' + Math.round(tg.water / GLASS), pc(d.water || 0, tg.water), 'g-water')
+        + tile('habits', 'Kroki', isNum(d.steps) ? fmt(d.steps / 1000, 1) : '–', 'tys. z 8', pc(d.steps || 0, 8000), 'g-steps')
+        + tile('meals', 'Białko', fmt(tot.p, 0), 'z ' + tg.protein + ' g', pc(tot.p, tg.protein), 'g-prot') + '</div>';
+    }
     if (date === t) h += expToday(date) + nudge();
     if (st.trackCycle) {
       const ph = cyc.phaseOf(date); let body;
@@ -125,7 +143,7 @@
 
     const sv = (k) => isNum(d[k]) ? d[k] : '–';
     const dFeel = A.checkedIn(d), dSleep = isNum(d.sleepHours) || isNum(d.sleepQuality), dHab = (d.water > 0) || isNum(d.exercise) || isNum(d.caffeine) || isNum(d.alcohol) || isNum(d.steps) || isNum(d.walkMin);
-    const symK = Object.keys(d.symptoms || {}), dSym = symK.length > 0 || !!d.noSymptoms, dStr = (d.stressors || []).length > 0;
+    const symK = Object.keys(d.symptoms || {}), dSym = symK.length > 0 || !!d.noSymptoms || (d.obs || []).length > 0, dStr = (d.stressors || []).length > 0;
     h += acc('feel', 'Jak się czujesz?', dFeel ? 'nastrój ' + sv('mood') + ' · energia ' + sv('energy') + ' · stres ' + sv('stress') : 'Nastrój, energia, stres', dFeel,
       '<div class="field"><div class="field-hd"><b>Nastrój</b><span class="val">' + (isNum(d.mood) ? d.mood + '/10' : '') + '</span></div>' + scale('mood', d.mood, 'pos', 'bardzo źle', 'świetnie') + '</div>'
       + '<div class="field"><div class="field-hd"><b>Energia</b><span class="val">' + (isNum(d.energy) ? d.energy + '/10' : '') + '</span></div>' + scale('energy', d.energy, 'pos', 'wyczerpana', 'pełna sił') + '</div>'
@@ -146,15 +164,14 @@
       + '<div class="field"><div class="field-hd"><b>Ćwiczenia</b><span class="small muted">trening, siłownia, bieganie</span></div><div class="chips" style="margin-top:8px">' + [0, 15, 30, 45, 60, 90].map((m) => '<button class="chip' + (d.exercise === m ? ' on' : '') + '" data-a="set" data-k="exercise" data-v="' + m + '">' + (m === 0 ? 'Brak' : m + ' min') + '</button>').join('') + '</div></div>');
 
     const symName = (k) => (A.SYMPTOMS.find((x) => x[0] === k) || [k, k])[1];
-    h += acc('symptoms', 'Objawy', symK.length ? symK.map((k) => symName(k).toLowerCase()).join(', ') : d.noSymptoms ? 'Dziś bez objawów' : 'Dotknij, aby dodać', dSym,
+    const obs = d.obs || [];
+    const symSum = symK.map((k) => symName(k).toLowerCase()).concat(obs.length ? [obs.length + ' ' + plPl(obs.length, 'wpis', 'wpisy', 'wpisów') + ' z godziną'] : []);
+    h += acc('symptoms', 'Objawy', symSum.length ? symSum.join(', ') : d.noSymptoms ? 'Dziś bez objawów' : 'Dotknij lub wpisz z godziną', dSym || obs.length > 0,
       '<div class="chips">' + A.SYMPTOMS.map(([k, l]) => { const v = (d.symptoms || {})[k] || 0; return '<button class="chip' + (v ? ' s' + v : '') + '" data-a="sym" data-k="' + k + '" aria-label="' + l + ', nasilenie ' + v + '">' + l + (v ? '<i>' + '●'.repeat(v) + '</i>' : '') + '</button>'; }).join('')
-      + '<button class="chip' + (d.noSymptoms ? ' on' : '') + '" data-a="nosym">Dziś bez objawów</button></div><p class="tiny muted" style="margin-top:8px">Dotknij kilka razy, aby zwiększyć nasilenie: 1 kropka to lekkie, 3 to silne.</p>');
+      + '<button class="chip' + (d.noSymptoms ? ' on' : '') + '" data-a="nosym">Dziś bez objawów</button></div><p class="tiny muted" style="margin-top:8px">Dotknij kilka razy, aby zwiększyć nasilenie: 1 kropka to lekkie, 3 to silne.</p>'
+      + '<div class="obs-box"><h3>Wpisz objaw z godziną</h3><p class="tiny muted" style="margin-bottom:10px">Własnymi słowami, np. „9:00 mega głodna” albo „18:00 skurcz brzucha”.</p>' + timeline(d) + '<div style="margin-top:' + ((d.meals || []).length || obs.length ? '12' : '0') + 'px">' + obsForm(date) + '</div></div>');
 
     const strName = (k) => (A.STRESSORS.find((x) => x[0] === k) || [k, k])[1];
-    const obs = d.obs || [];
-    h += acc('obs', 'Obserwacje z godziną', obs.length ? obs.length + ' ' + plPl(obs.length, 'wpis', 'wpisy', 'wpisów') : 'Głód, skurcz brzucha, zachcianka…', obs.length > 0,
-      timeline(d) + '<div style="margin-top:' + ((d.meals || []).length || obs.length ? '14' : '0') + 'px">' + obsForm(date) + '</div>');
-
     h += acc('stress', 'Co Cię stresowało?', dStr ? d.stressors.map((k) => strName(k).toLowerCase()).join(', ') : 'Praca, relacje, finanse…', dStr,
       '<div class="chips">' + A.STRESSORS.map(([k, l]) => '<button class="chip rose' + ((d.stressors || []).includes(k) ? ' on' : '') + '" data-a="tog" data-k="stressors" data-v="' + k + '">' + l + '</button>').join('') + '</div>');
 
@@ -368,7 +385,7 @@
     const w = I.weekdays(db, 'wbCore', rangeFrom());
     if (!w.ok) return card('Dni tygodnia', '', '<p class="small muted">Po około 4 tygodniach wpisów zobaczysz, które dni tygodnia są dla Ciebie lżejsze, a które trudniejsze.</p>');
     const vals = w.rows.map((r) => r.mean), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-    const bars = '<div class="wk">' + w.rows.map((r) => '<div class="wk-c' + (w.sig && r === w.best ? ' best' : '') + (w.sig && r === w.worst ? ' worst' : '') + '"><b>' + fmt(r.mean, 0) + '</b><i style="height:' + Math.max(6, (r.mean - Math.min(lo, 40) * 0) / Math.max(hi, 1) * 74).toFixed(0) + 'px"></i><span>' + r.short + '</span></div>').join('') + '</div>';
+    const bars = '<div class="wk7">' + w.rows.map((r) => '<div class="wk-c' + (w.sig && r === w.best ? ' best' : '') + (w.sig && r === w.worst ? ' worst' : '') + '"><b>' + fmt(r.mean, 0) + '</b><i style="height:' + Math.max(6, (r.mean - Math.min(lo, 40) * 0) / Math.max(hi, 1) * 74).toFixed(0) + 'px"></i><span>' + r.short + '</span></div>').join('') + '</div>';
     const txt = w.sig ? 'Najlepiej czujesz się w dzień: <b>' + w.best.label + '</b> (' + fmt(w.best.mean, 0) + '/100), a najtrudniej: <b>' + w.worst.label + '</b> (' + fmt(w.worst.mean, 0) + '/100). Ten wzorzec rzadko jest dziełem przypadku (p=' + fmt(w.p, 3) + ').'
       : 'Różnice między dniami tygodnia (do ' + fmt(w.spread, 0) + ' pkt) mieszczą się w granicach przypadku (p=' + fmt(w.p, 2) + '), więc na razie nie ma stałego wzorca.';
     return card('Dni tygodnia', 'średnie samopoczucie (0–100)', bars + '<p class="small" style="margin-top:8px">' + txt + '</p>');
@@ -675,7 +692,7 @@
       case 'print': window.print(); break;
       case 'ob-tag': S.ob.tag = S.ob.tag === v ? null : v; render(); break;
       case 'ob-sev': S.ob.sev = Number(v); render(); break;
-      case 'ob-add': { const o = S.ob; if (!o || !/^\d{1,2}:\d{2}$/.test(o.t || '')) { toast('Ustaw godzinę'); break; } if (!o.tag && !(o.text || '').trim()) { toast('Wybierz rodzaj albo wpisz opis'); break; } const d = day(S.date, true); d.obs = d.obs || []; d.obs.push({ id: 'o' + Date.now().toString(36), t: o.t.padStart(5, '0'), tag: o.tag || 'inne', sev: o.sev || 2, text: (o.text || '').trim() }); S.ob = null; S.open.obs = true; save(); render(); toast('Dodano do osi dnia'); break; }
+      case 'ob-add': { const o = S.ob; if (!o || !/^\d{1,2}:\d{2}$/.test(o.t || '')) { toast('Ustaw godzinę'); break; } if (!o.tag && !(o.text || '').trim()) { toast('Wpisz objaw albo wybierz z listy'); break; } const d = day(S.date, true); d.obs = d.obs || []; d.obs.push({ id: 'o' + Date.now().toString(36), t: o.t.padStart(5, '0'), tag: o.tag || (o.text || '').trim().toLowerCase().slice(0, 40), sev: o.sev || 2, text: (o.text || '').trim() }); S.ob = null; S.open.symptoms = true; save(); render(); toast('Dodano wpis'); break; }
       case 'ob-del': { const d = db.days[S.date]; if (d) { d.obs = (d.obs || []).filter((x) => x.id !== el.dataset.id); clean(d, S.date); save(); render(); } break; }
       case 'cf-del': { const cf = db.settings.customFoods || []; cf.splice(Number(el.dataset.i), 1); Fd.setCustom(cf); save(); render(); break; }
       case 'rate': { const d = db.days[S.date], m = d && d.meals.find((x) => x.id === el.dataset.id); if (m) { const n = Number(v); m.after = m.after || { score: null, tags: [] }; m.after.score = m.after.score === n ? null : n; save(); render(); } break; }

@@ -1,5 +1,5 @@
 /* Pyszczek: service worker. Pliki aplikacji działają offline; dane użytkowniczki są tylko w localStorage. */
-const CACHE = 'pyszczek-v5';
+const CACHE = 'pyszczek-v7';
 const ASSETS = ['./', 'index.html', 'style.css', 'foods.js', 'analysis.js', 'insights.js', 'demo.js', 'charts.js', 'app.js', 'pet.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
